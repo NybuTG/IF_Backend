@@ -1,29 +1,5 @@
-// Start listening on port 8080 of localhost.
-const server = Deno.listen({ port: 8080 });
-console.log(`HTTP webserver running.  Access it at:  http://localhost:8080/`);
+import {Application, Router} from "https://deno.land/x/oak/mod.ts";
+import * as postgres from "https://deno.land/x/postgres@v0.14.0/mod.ts";
+import "https://deno.land/x/dotenv/load.ts";
 
-// Connections to the server will be yielded up as an async iterable.
-for await (const conn of server) {
-  // In order to not be blocking, we need to handle each connection individually
-  // in its own async function.
-  (async () => {
-    // This "upgrades" a network connection into an HTTP connection.
-    const httpConn = Deno.serveHttp(conn);
-    // Each request sent over the HTTP connection will be yielded as an async
-    // iterator from the HTTP connection.
-    for await (const requestEvent of httpConn) {
-      // The native HTTP server uses the web standard `Request` and `Response`
-      // objects.
-      const body = `Your user-agent is:\n\n${requestEvent.request.headers.get(
-        "user-agent",
-      ) ?? "Unknown"}`;
-      // The requestEvent's `.respondWith()` method is how we send the response
-      // back to the client.
-      requestEvent.respondWith(
-        new Response(body, {
-          status: 200,
-        }),
-      );
-    }
-  })();
-}
+const databaseUrl = Deno.env.get("DATABASE_URL");
